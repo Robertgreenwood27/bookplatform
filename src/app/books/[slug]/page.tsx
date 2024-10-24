@@ -4,30 +4,32 @@ import { urlForImage } from '@/sanity/lib/image'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { SanityImageAsset, SanityImageCrop, SanityImageHotspot } from '@sanity/image-url/lib/types/types'
-
-interface SanityImage {
-  _type: 'image'
-  asset: SanityImageAsset
-  crop?: SanityImageCrop
-  hotspot?: SanityImageHotspot
-}
-
-interface SanitySlug {
-  current: string
-  _type: 'slug'
-}
+import { SanityAsset } from '@sanity/image-url/lib/types/types'
 
 interface Chapter {
   _id: string
   title: string
-  slug: SanitySlug
+  slug: {
+    current: string
+  }
   order: number
 }
 
-interface Author {
-  _id: string
-  name: string
+interface SanityImage {
+  _type: 'image'
+  asset: SanityAsset
+  hotspot?: {
+    x: number
+    y: number
+    height: number
+    width: number
+  }
+  crop?: {
+    top: number
+    bottom: number
+    left: number
+    right: number
+  }
 }
 
 interface Book {
@@ -35,14 +37,16 @@ interface Book {
   title: string
   description?: string
   coverImage: SanityImage
-  author?: Author
+  author?: {
+    name: string
+  }
   chapters: Chapter[]
 }
 
 async function getBook(slug: string) {
   try {
     // First, let's get all chapters for this book directly
-    const allChapters = await client.fetch<Chapter[]>(`
+    const allChapters = await client.fetch(`
       *[_type == "chapter" && references(*[_type == "book" && slug.current == $slug]._id)] {
         _id,
         title,
@@ -60,10 +64,7 @@ async function getBook(slug: string) {
         title,
         description,
         coverImage,
-        "author": author->{
-          _id,
-          name
-        },
+        "author": author->{name},
         "chapters": *[_type == "chapter" && _id in ^.chapters[]._ref] | order(order asc) {
           _id,
           title,
@@ -92,13 +93,7 @@ async function getBook(slug: string) {
   }
 }
 
-interface PageProps {
-  params: { 
-    slug: string 
-  }
-}
-
-export default async function BookPage({ params }: PageProps) {
+export default async function BookPage({ params }: { params: { slug: string } }) {
   const book = await getBook(params.slug)
 
   if (!book) {

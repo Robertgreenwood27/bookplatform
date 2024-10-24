@@ -150,7 +150,7 @@ const components: PortableTextComponents = {
         {children}
       </code>
     ),
-    link: ({ children, value }: PortableTextComponentProps<{ _type: 'link'; href: string }>) => (
+    link: ({ value, children }: PortableTextMarkComponentProps<{ href: string }>) => (
       <a 
         href={value?.href} 
         className="text-blue-400 hover:text-blue-300 transition-colors"

@@ -3,14 +3,7 @@ import { client } from '@/sanity/lib/client'
 import { urlForImage } from '@/sanity/lib/image'
 import Image from 'next/image'
 import Link from 'next/link'
-import { SanityImageAsset, SanityImageCrop, SanityImageHotspot } from '@sanity/image-url/lib/types/types'
-
-interface SanityImage {
-  _type: 'image'
-  asset: SanityImageAsset
-  crop?: SanityImageCrop
-  hotspot?: SanityImageHotspot
-}
+import type { Image as SanityImageType } from 'sanity'
 
 interface SanitySlug {
   current: string
@@ -26,7 +19,7 @@ interface BookDocument {
   _id: string
   title: string
   slug: SanitySlug
-  coverImage: SanityImage
+  coverImage: SanityImageType
   description?: string
   author?: Author
   _createdAt: string
@@ -110,42 +103,46 @@ export default async function Home() {
         
         {books?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {books.map((book) => (
-              <Link 
-                href={`/books/${book.slug.current}`} 
-                key={book._id}
-                className="group relative block"
-              >
-                <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-xl transition-all duration-300 group-hover:scale-105 bg-zinc-900">
-                  {book.coverImage && (
-                    <Image
-                      src={urlForImage(book.coverImage)?.url() || ''}
-                      alt={book.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-70 transition-opacity" />
-                  <div className="absolute bottom-0 w-full p-6 space-y-2">
-                    <h2 className="text-2xl font-bold text-white">
-                      {book.title}
-                    </h2>
-                    {book.author && (
-                      <p className="text-sm text-gray-300">
-                        by {book.author.name}
-                      </p>
+            {books.map((book) => {
+              const coverImageUrl = book.coverImage ? urlForImage(book.coverImage)?.url() : null;
+
+              return (
+                <Link 
+                  href={`/books/${book.slug.current}`} 
+                  key={book._id}
+                  className="group relative block"
+                >
+                  <div className="aspect-[3/4] relative overflow-hidden rounded-lg shadow-xl transition-all duration-300 group-hover:scale-105 bg-zinc-900">
+                    {coverImageUrl && (
+                      <Image
+                        src={coverImageUrl}
+                        alt={book.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority
+                      />
                     )}
-                    {book.description && (
-                      <p className="text-sm text-gray-400 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {book.description}
-                      </p>
-                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-70 transition-opacity" />
+                    <div className="absolute bottom-0 w-full p-6 space-y-2">
+                      <h2 className="text-2xl font-bold text-white">
+                        {book.title}
+                      </h2>
+                      {book.author && (
+                        <p className="text-sm text-gray-300">
+                          by {book.author.name}
+                        </p>
+                      )}
+                      {book.description && (
+                        <p className="text-sm text-gray-400 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          {book.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-20">
@@ -155,4 +152,4 @@ export default async function Home() {
       </main>
     </div>
   )
-}   
+}

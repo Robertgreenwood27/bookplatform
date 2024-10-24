@@ -4,85 +4,11 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { PortableText, PortableTextComponents } from '@portabletext/react'
-import type { 
-  PortableTextListComponent,
-  PortableTextListItemComponent,
-  PortableTextMarkComponent,
-  PortableTextComponentProps,
-  PortableTextBlockComponent,
-} from '@portabletext/react'
-import type { TypedObject } from '@portabletext/types'
-import type { Image as SanityImage } from 'sanity'
+import { PortableText } from '@portabletext/react'
 
-// Define specific block types
-interface CodeBlock extends TypedObject {
-  _type: 'code'
-  code: string
-  language?: string
-  filename?: string
-}
-
-interface SanityImageBlock extends TypedObject {
-  _type: 'image'
-  asset: {
-    _ref: string
-    _type: 'reference'
-  }
-  alt?: string
-  caption?: string
-  hotspot?: {
-    x: number
-    y: number
-    height: number
-    width: number
-  }
-  crop?: {
-    top: number
-    bottom: number
-    left: number
-    right: number
-  }
-}
-
-interface Chapter {
-  _id: string
-  title: string
-  content: TypedObject[]
-  order: number
-  audioFile?: {
-    asset: {
-      url: string
-    }
-  }
-}
-
-interface ChapterNavigation {
-  title: string
-  slug: {
-    current: string
-  }
-}
-
-interface Book {
-  _id: string
-  title: string
-  author: {
-    name: string
-  }
-}
-
-interface PageData {
-  chapter: Chapter
-  book: Book
-  previousChapter?: ChapterNavigation
-  nextChapter?: ChapterNavigation
-}
-
-
-const components: PortableTextComponents = {
+const components = {
   types: {
-    code: ({ value }: PortableTextComponentProps<CodeBlock>) => {
+    code: ({ value }) => {
       return (
         <pre className="bg-zinc-900 p-4 rounded-lg overflow-x-auto">
           <code className="text-sm font-mono" data-language={value.language}>
@@ -91,8 +17,8 @@ const components: PortableTextComponents = {
         </pre>
       )
     },
-    image: ({ value }: PortableTextComponentProps<SanityImageBlock>) => {
-      const imageData: SanityImage = {
+    image: ({ value }) => {
+      const imageData = {
         _type: 'image',
         asset: value.asset,
         hotspot: value.hotspot,
@@ -123,34 +49,34 @@ const components: PortableTextComponents = {
     },
   },
   block: {
-    h1: ({ children }: { children: React.ReactNode }) => (
+    h1: ({ children }) => (
       <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
     ),
-    h2: ({ children }: { children: React.ReactNode }) => (
+    h2: ({ children }) => (
       <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
     ),
-    h3: ({ children }: { children: React.ReactNode }) => (
+    h3: ({ children }) => (
       <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
     ),
-    h4: ({ children }: { children: React.ReactNode }) => (
+    h4: ({ children }) => (
       <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
     ),
-    normal: ({ children }: { children: React.ReactNode }) => (
+    normal: ({ children }) => (
       <p className="mb-4 leading-relaxed">{children}</p>
     ),
-    blockquote: ({ children }: { children: React.ReactNode }) => (
+    blockquote: ({ children }) => (
       <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
         {children}
       </blockquote>
     ),
-  } as Record<string, PortableTextBlockComponent>,
+  },
   marks: {
-    code: ({ children }: { children: React.ReactNode }) => (
+    code: ({ children }) => (
       <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
         {children}
       </code>
     ),
-    link: ({ value, children }: PortableTextMarkComponentProps<{ href: string }>) => (
+    link: ({ children, value }) => (
       <a 
         href={value?.href} 
         className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -160,38 +86,38 @@ const components: PortableTextComponents = {
         {children}
       </a>
     ),
-    strong: ({ children }: { children: React.ReactNode }) => (
+    strong: ({ children }) => (
       <strong className="font-bold">{children}</strong>
     ),
-    em: ({ children }: { children: React.ReactNode }) => (
+    em: ({ children }) => (
       <em className="italic">{children}</em>
     ),
-    underline: ({ children }: { children: React.ReactNode }) => (
+    underline: ({ children }) => (
       <span className="underline">{children}</span>
     ),
-    'strike-through': ({ children }: { children: React.ReactNode }) => (
+    'strike-through': ({ children }) => (
       <span className="line-through">{children}</span>
     ),
-  } as Record<string, PortableTextMarkComponent>,
+  },
   list: {
-    bullet: ({ children }: { children: React.ReactNode }) => (
+    bullet: ({ children }) => (
       <ul className="list-disc pl-4 mb-4">{children}</ul>
     ),
-    number: ({ children }: { children: React.ReactNode }) => (
+    number: ({ children }) => (
       <ol className="list-decimal pl-4 mb-4">{children}</ol>
     ),
-  } as Record<string, PortableTextListComponent>,
+  },
   listItem: {
-    bullet: ({ children }: { children: React.ReactNode }) => (
+    bullet: ({ children }) => (
       <li className="mb-2">{children}</li>
     ),
-    number: ({ children }: { children: React.ReactNode }) => (
+    number: ({ children }) => (
       <li className="mb-2">{children}</li>
     ),
-  } as Record<string, PortableTextListItemComponent>,
+  },
 }
 
-async function getChapterData(bookSlug: string, chapterSlug: string): Promise<PageData> {
+async function getChapterData(bookSlug, chapterSlug) {
   try {
     const data = await client.fetch(`{
       "chapter": *[_type == "chapter" && slug.current == $chapterSlug][0] {
@@ -222,7 +148,7 @@ async function getChapterData(bookSlug: string, chapterSlug: string): Promise<Pa
     }`, { bookSlug, chapterSlug })
 
     const currentIndex = data.allChapters.findIndex(
-      (ch: ChapterNavigation) => ch.slug.current === chapterSlug
+      (ch) => ch.slug.current === chapterSlug
     )
 
     const previousChapter = currentIndex > 0 ? data.allChapters[currentIndex - 1] : null
@@ -242,11 +168,7 @@ async function getChapterData(bookSlug: string, chapterSlug: string): Promise<Pa
   }
 }
 
-export default async function ChapterPage({
-  params,
-}: {
-  params: { slug: string; chapterSlug: string }
-}) {
+export default async function ChapterPage({ params }) {
   const { chapter, book, previousChapter, nextChapter } = await getChapterData(
     params.slug,
     params.chapterSlug

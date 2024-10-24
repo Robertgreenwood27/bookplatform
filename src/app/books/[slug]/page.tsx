@@ -82,6 +82,8 @@ export default async function BookPage({ params }: { params: { slug: string } })
     notFound()
   }
 
+  const coverImageUrl = book.coverImage ? urlForImage(book.coverImage)?.url() : null
+
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="container mx-auto px-4 py-12">
@@ -98,9 +100,9 @@ export default async function BookPage({ params }: { params: { slug: string } })
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Book Cover */}
           <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-2xl">
-            {book.coverImage && (
+            {coverImageUrl && (
               <Image
-                src={urlForImage(book.coverImage).url()}
+                src={coverImageUrl}
                 alt={book.title}
                 fill
                 className="object-cover"

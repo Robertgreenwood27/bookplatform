@@ -8,10 +8,7 @@ import { PortableText, PortableTextComponents } from '@portabletext/react'
 import type { TypedObject } from '@portabletext/types'
 import type { 
   PortableTextBlock, 
-  ArbitraryTypedObject, 
   PortableTextMarkDefinition,
-  PortableTextTypeComponent,
-  PortableTextBlockComponent,
   PortableTextComponentProps
 } from '@portabletext/react'
 
@@ -65,11 +62,6 @@ interface PageData {
   previousChapter?: ChapterNavigation
   nextChapter?: ChapterNavigation
 }
-
-type BlockComponent = PortableTextBlockComponent<PortableTextBlock>
-type CustomMarkComponent = React.ComponentType<PortableTextComponentProps<PortableTextMarkDefinition>>
-
-const Block: BlockComponent = ({ children }) => <div>{children}</div>
 
 const components: PortableTextComponents = {
   types: {

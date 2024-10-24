@@ -3,13 +3,42 @@ import { urlForImage } from '@/sanity/lib/image'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { PortableText } from '@portabletext/react'
+import { PortableText, PortableTextComponents } from '@portabletext/react'
 import type { Image as SanityImageType } from 'sanity'
+import type { TypedObject, Block } from '@portabletext/types'
+
+interface CodeBlock extends TypedObject {
+  _type: 'code'
+  code: string
+  language?: string
+  filename?: string
+}
+
+interface SanityImageBlock extends TypedObject {
+  _type: 'image'
+  asset: {
+    _ref: string
+    _type: 'reference'
+  }
+  alt?: string
+  caption?: string
+}
+
+interface CustomBlock extends Block {
+  style?: 'normal' | 'h1' | 'h2' | 'h3' | 'h4' | 'blockquote'
+}
+
+interface PortableTextMarkProps {
+  children: React.ReactNode
+  value?: {
+    href?: string
+  }
+}
 
 interface Chapter {
   _id: string
   title: string
-  content: any[] // This is the Portable Text content array
+  content: TypedObject[]
   order: number
   audioFile?: {
     asset: {
@@ -40,9 +69,9 @@ interface PageData {
   nextChapter?: ChapterNavigation
 }
 
-const components = {
+const components: PortableTextComponents = {
   types: {
-    code: ({value}: any) => {
+    code: ({ value }: { value: CodeBlock }) => {
       return (
         <pre className="bg-zinc-900 p-4 rounded-lg overflow-x-auto">
           <code className="text-sm font-mono" data-language={value.language}>
@@ -51,7 +80,7 @@ const components = {
         </pre>
       )
     },
-    image: ({value}: any) => {
+    image: ({ value }: { value: SanityImageBlock }) => {
       const imageUrl = urlForImage(value)?.url()
       return (
         <figure className="my-8">
@@ -72,24 +101,34 @@ const components = {
     },
   },
   block: {
-    h1: ({children}: any) => <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>,
-    h2: ({children}: any) => <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>,
-    h3: ({children}: any) => <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>,
-    h4: ({children}: any) => <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>,
-    blockquote: ({children}: any) => (
+    h1: ({ children }: { children: React.ReactNode }) => (
+      <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
+    ),
+    h2: ({ children }: { children: React.ReactNode }) => (
+      <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
+    ),
+    h3: ({ children }: { children: React.ReactNode }) => (
+      <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
+    ),
+    h4: ({ children }: { children: React.ReactNode }) => (
+      <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
+    ),
+    blockquote: ({ children }: { children: React.ReactNode }) => (
       <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
         {children}
       </blockquote>
     ),
-    normal: ({children}: any) => <p className="mb-4 leading-relaxed">{children}</p>,
+    normal: ({ children }: { children: React.ReactNode }) => (
+      <p className="mb-4 leading-relaxed">{children}</p>
+    ),
   },
   marks: {
-    code: ({children}: any) => (
+    code: ({ children }: PortableTextMarkProps) => (
       <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
         {children}
       </code>
     ),
-    link: ({children, value}: any) => (
+    link: ({ children, value }: PortableTextMarkProps) => (
       <a 
         href={value?.href} 
         className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -99,10 +138,18 @@ const components = {
         {children}
       </a>
     ),
-    strong: ({children}: any) => <strong className="font-bold">{children}</strong>,
-    em: ({children}: any) => <em className="italic">{children}</em>,
-    underline: ({children}: any) => <span className="underline">{children}</span>,
-    'strike-through': ({children}: any) => <span className="line-through">{children}</span>,
+    strong: ({ children }: PortableTextMarkProps) => (
+      <strong className="font-bold">{children}</strong>
+    ),
+    em: ({ children }: PortableTextMarkProps) => (
+      <em className="italic">{children}</em>
+    ),
+    underline: ({ children }: PortableTextMarkProps) => (
+      <span className="underline">{children}</span>
+    ),
+    'strike-through': ({ children }: PortableTextMarkProps) => (
+      <span className="line-through">{children}</span>
+    ),
   },
 }
 
@@ -138,36 +185,13 @@ async function getChapterData(bookSlug: string, chapterSlug: string): Promise<Pa
     }`, { bookSlug, chapterSlug })
 
     const currentIndex = data.allChapters.findIndex(
-      (ch: any) => ch.slug.current === chapterSlug
+      (ch: ChapterNavigation) => ch.slug.current === chapterSlug
     )
 
     const previousChapter = currentIndex > 0 ? data.allChapters[currentIndex - 1] : null
     const nextChapter = currentIndex < data.allChapters.length - 1 
       ? data.allChapters[currentIndex + 1] 
       : null
-
-    console.log('Navigation Debug:', {
-      currentChapterSlug: chapterSlug,
-      totalChapters: data.allChapters.length,
-      allChapterOrders: data.allChapters.map((ch: any) => ({
-        title: ch.title,
-        order: ch.order,
-        slug: ch.slug.current
-      })),
-      currentIndex,
-      hasPrevious: !!previousChapter,
-      hasNext: !!nextChapter,
-      previousChapter: previousChapter ? {
-        title: previousChapter.title,
-        order: previousChapter.order,
-        slug: previousChapter.slug.current
-      } : null,
-      nextChapter: nextChapter ? {
-        title: nextChapter.title,
-        order: nextChapter.order,
-        slug: nextChapter.slug.current
-      } : null
-    })
 
     return {
       chapter: data.chapter,

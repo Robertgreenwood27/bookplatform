@@ -3,8 +3,14 @@ import { defineConfig } from 'sanity'
 import { deskTool } from 'sanity/desk'
 import { visionTool } from '@sanity/vision'
 import { schemaTypes } from './schemaTypes'
-import { structure } from './structure'
 import { projectId, dataset } from './env'
+import type { StructureBuilder } from 'sanity/desk'
+
+// Define the structure builder function with proper typing
+const structure = (S: StructureBuilder) =>
+  S.list()
+    .title('Content')
+    .items(S.documentTypeListItems())
 
 export default defineConfig({
   basePath: '/studio',

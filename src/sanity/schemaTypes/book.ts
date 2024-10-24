@@ -1,5 +1,7 @@
 // src/sanity/schemaTypes/book.ts
-export const book = {
+import { Rule, SchemaTypeDefinition } from 'sanity'
+
+export const book: SchemaTypeDefinition = {
   name: 'book',
   title: 'Book',
   type: 'document',
@@ -8,7 +10,7 @@ export const book = {
       name: 'title',
       title: 'Title',
       type: 'string',
-      validation: (Rule: any) => Rule.required()
+      validation: (rule: Rule) => rule.required()
     },
     {
       name: 'slug',
@@ -18,7 +20,7 @@ export const book = {
         source: 'title',
         maxLength: 96
       },
-      validation: (Rule: any) => Rule.required()
+      validation: (rule: Rule) => rule.required()
     },
     {
       name: 'coverImage',
@@ -27,7 +29,7 @@ export const book = {
       options: {
         hotspot: true
       },
-      validation: (Rule: any) => Rule.required()
+      validation: (rule: Rule) => rule.required()
     },
     {
       name: 'description',
@@ -38,13 +40,13 @@ export const book = {
       name: 'author',
       title: 'Author',
       type: 'reference',
-      to: [{type: 'author'}]
+      to: [{ type: 'author' }]
     },
     {
       name: 'chapters',
       title: 'Chapters',
       type: 'array',
-      of: [{type: 'reference', to: [{type: 'chapter'}]}]
+      of: [{ type: 'reference', to: [{ type: 'chapter' }] }]
     }
   ]
 }

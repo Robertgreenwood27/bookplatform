@@ -4,31 +4,45 @@ import { urlForImage } from '@/sanity/lib/image'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { SanityImageAsset, SanityImageCrop, SanityImageHotspot } from '@sanity/image-url/lib/types/types'
+
+interface SanityImage {
+  _type: 'image'
+  asset: SanityImageAsset
+  crop?: SanityImageCrop
+  hotspot?: SanityImageHotspot
+}
+
+interface SanitySlug {
+  current: string
+  _type: 'slug'
+}
 
 interface Chapter {
   _id: string
   title: string
-  slug: {
-    current: string
-  }
+  slug: SanitySlug
   order: number
+}
+
+interface Author {
+  _id: string
+  name: string
 }
 
 interface Book {
   _id: string
   title: string
   description?: string
-  coverImage: any
-  author?: {
-    name: string
-  }
+  coverImage: SanityImage
+  author?: Author
   chapters: Chapter[]
 }
 
 async function getBook(slug: string) {
   try {
     // First, let's get all chapters for this book directly
-    const allChapters = await client.fetch(`
+    const allChapters = await client.fetch<Chapter[]>(`
       *[_type == "chapter" && references(*[_type == "book" && slug.current == $slug]._id)] {
         _id,
         title,
@@ -46,7 +60,10 @@ async function getBook(slug: string) {
         title,
         description,
         coverImage,
-        "author": author->{name},
+        "author": author->{
+          _id,
+          name
+        },
         "chapters": *[_type == "chapter" && _id in ^.chapters[]._ref] | order(order asc) {
           _id,
           title,
@@ -75,7 +92,13 @@ async function getBook(slug: string) {
   }
 }
 
-export default async function BookPage({ params }: { params: { slug: string } }) {
+interface PageProps {
+  params: { 
+    slug: string 
+  }
+}
+
+export default async function BookPage({ params }: PageProps) {
   const book = await getBook(params.slug)
 
   if (!book) {
@@ -85,12 +108,22 @@ export default async function BookPage({ params }: { params: { slug: string } })
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="container mx-auto px-4 py-12">
+        {/* Navigation */}
+        <div className="mb-8">
+          <Link 
+            href="/"
+            className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-2"
+          >
+            ← Back to Library
+          </Link>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Book Cover */}
           <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-2xl">
             {book.coverImage && (
               <Image
-                src={urlForImage(book.coverImage).url()}
+                src={urlForImage(book.coverImage)?.url() || ''}
                 alt={book.title}
                 fill
                 className="object-cover"

@@ -3,11 +3,33 @@ import { client } from '@/sanity/lib/client'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { PortableTextBlock } from '@portabletext/types'
+
+// Refined types for Sanity content
+interface SanityReference {
+  _ref: string
+  _type: 'reference'
+}
+
+interface SanitySlug {
+  current: string
+  _type: 'slug'
+}
+
+interface ChapterContent extends PortableTextBlock {
+  children: Array<{
+    text: string
+    _type: 'span'
+    _key: string
+  }>
+  _type: 'block'
+  _key: string
+}
 
 interface Chapter {
   _id: string
   title: string
-  content: any[]
+  content: ChapterContent[]
   order: number
   audioFile?: {
     asset: {
@@ -17,18 +39,21 @@ interface Chapter {
 }
 
 interface ChapterNavigation {
+  _id: string
   title: string
-  slug: {
-    current: string
-  }
+  slug: SanitySlug
+  order: number
+}
+
+interface Author {
+  name: string
 }
 
 interface Book {
   _id: string
   title: string
-  author: {
-    name: string
-  }
+  author: Author
+  chapters: SanityReference[]
 }
 
 interface PageData {
@@ -40,8 +65,11 @@ interface PageData {
 
 async function getChapterData(bookSlug: string, chapterSlug: string): Promise<PageData> {
   try {
-    // Get complete data in a single query
-    const data = await client.fetch(`{
+    const data = await client.fetch<{
+      chapter: Chapter
+      book: Book
+      allChapters: ChapterNavigation[]
+    }>(`{
       "chapter": *[_type == "chapter" && slug.current == $chapterSlug][0] {
         _id,
         title,
@@ -56,7 +84,8 @@ async function getChapterData(bookSlug: string, chapterSlug: string): Promise<Pa
       "book": *[_type == "book" && slug.current == $bookSlug][0] {
         _id,
         title,
-        "author": author->{ name }
+        "author": author->{ name },
+        chapters
       },
       "allChapters": *[
         _type == "chapter" && 
@@ -70,36 +99,13 @@ async function getChapterData(bookSlug: string, chapterSlug: string): Promise<Pa
     }`, { bookSlug, chapterSlug })
 
     const currentIndex = data.allChapters.findIndex(
-      (ch: any) => ch.slug.current === chapterSlug
+      (ch) => ch.slug.current === chapterSlug
     )
 
-    const previousChapter = currentIndex > 0 ? data.allChapters[currentIndex - 1] : null
+    const previousChapter = currentIndex > 0 ? data.allChapters[currentIndex - 1] : undefined
     const nextChapter = currentIndex < data.allChapters.length - 1 
       ? data.allChapters[currentIndex + 1] 
-      : null
-
-    console.log('Navigation Debug:', {
-      currentChapterSlug: chapterSlug,
-      totalChapters: data.allChapters.length,
-      allChapterOrders: data.allChapters.map((ch: any) => ({
-        title: ch.title,
-        order: ch.order,
-        slug: ch.slug.current
-      })),
-      currentIndex,
-      hasPrevious: !!previousChapter,
-      hasNext: !!nextChapter,
-      previousChapter: previousChapter ? {
-        title: previousChapter.title,
-        order: previousChapter.order,
-        slug: previousChapter.slug.current
-      } : null,
-      nextChapter: nextChapter ? {
-        title: nextChapter.title,
-        order: nextChapter.order,
-        slug: nextChapter.slug.current
-      } : null
-    })
+      : undefined
 
     return {
       chapter: data.chapter,
@@ -113,11 +119,14 @@ async function getChapterData(bookSlug: string, chapterSlug: string): Promise<Pa
   }
 }
 
-export default async function ChapterPage({
-  params,
-}: {
-  params: { slug: string; chapterSlug: string }
-}) {
+interface PageProps {
+  params: { 
+    slug: string
+    chapterSlug: string 
+  }
+}
+
+export default async function ChapterPage({ params }: PageProps) {
   const { chapter, book, previousChapter, nextChapter } = await getChapterData(
     params.slug,
     params.chapterSlug
@@ -126,14 +135,6 @@ export default async function ChapterPage({
   if (!chapter || !book) {
     notFound()
   }
-
-  // Debug logging in the component
-  console.log('Navigation links state:', {
-    hasPreviousChapter: !!previousChapter,
-    previousChapterTitle: previousChapter?.title,
-    hasNextChapter: !!nextChapter,
-    nextChapterTitle: nextChapter?.title
-  })
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -157,7 +158,7 @@ export default async function ChapterPage({
             )}
           </header>
 
-          {/* Audio Player (if available) */}
+          {/* Audio Player */}
           {chapter.audioFile?.asset?.url && (
             <div className="mb-8">
               <audio 
@@ -172,12 +173,12 @@ export default async function ChapterPage({
 
           {/* Chapter Text Content */}
           <div className="prose prose-invert prose-lg">
-            {chapter.content?.map((block: any) => {
+            {chapter.content?.map((block) => {
               if (block._type === 'block') {
                 return (
                   <p key={block._key} className="mb-4">
                     {block.children
-                      .map((child: any) => child.text)
+                      .map((child) => child.text)
                       .join('')}
                   </p>
                 )
@@ -200,7 +201,7 @@ export default async function ChapterPage({
                 </div>
               </Link>
             ) : (
-              <div></div> // Empty div to maintain spacing
+              <div></div>
             )}
 
             {nextChapter ? (
@@ -215,7 +216,7 @@ export default async function ChapterPage({
                 <ChevronRight size={20} />
               </Link>
             ) : (
-              <div></div> // Empty div to maintain spacing
+              <div></div>
             )}
           </nav>
         </article>

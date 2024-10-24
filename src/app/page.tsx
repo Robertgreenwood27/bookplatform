@@ -3,37 +3,77 @@ import { client } from '@/sanity/lib/client'
 import { urlForImage } from '@/sanity/lib/image'
 import Image from 'next/image'
 import Link from 'next/link'
+import { SanityImageAsset, SanityImageCrop, SanityImageHotspot } from '@sanity/image-url/lib/types/types'
+
+interface SanityImage {
+  _type: 'image'
+  asset: SanityImageAsset
+  crop?: SanityImageCrop
+  hotspot?: SanityImageHotspot
+}
+
+interface SanitySlug {
+  current: string
+  _type: 'slug'
+}
 
 interface Author {
   _id: string
   name: string
 }
 
-interface Book {
+interface BookDocument {
   _id: string
   title: string
-  slug: {
-    current: string
-  }
-  coverImage: any
+  slug: SanitySlug
+  coverImage: SanityImage
   description?: string
   author?: Author
+  _createdAt: string
+  _updatedAt: string
+}
+
+interface BookValidation extends BookDocument {
+  publishedAt?: string
 }
 
 async function getBooks() {
   try {
-    // First, verify connection by fetching count of both draft and published documents
-    const booksCount = await client.fetch(`count(*[_type == "book" && !(_id in path("drafts.**"))])`)
-    console.log('Total number of published books in Sanity:', booksCount)
+    // First, check for ALL documents of type "book", including drafts
+    const allBooksCount = await client.fetch<number>(`count(*[_type == "book"])`)
+    console.log('Total number of books (including drafts):', allBooksCount)
 
-    // Fetch full book data, explicitly excluding drafts
-    const books = await client.fetch(`
-      *[_type == "book" && !(_id in path("drafts.**"))] {
+    // Check specifically for published books
+    const publishedBooksCount = await client.fetch<number>(`count(*[_type == "book" && !(_id in path("drafts.**"))])`)
+    console.log('Number of published books:', publishedBooksCount)
+
+    // Check for draft books
+    const draftBooksCount = await client.fetch<number>(`count(*[_type == "book" && _id in path("drafts.**")])`)
+    console.log('Number of draft books:', draftBooksCount)
+
+    // Fetch ALL books first (including drafts) to see what's available
+    const allBooks = await client.fetch<BookValidation[]>(`
+      *[_type == "book"] {
+        _id,
+        title,
+        slug,
+        _createdAt,
+        _updatedAt,
+        "publishedAt": coalesce(publishedAt, _createdAt)
+      }
+    `)
+    console.log('All available books:', JSON.stringify(allBooks, null, 2))
+
+    // Now fetch the published books with full data
+    const books = await client.fetch<BookDocument[]>(`
+      *[_type == "book" && !(_id in path("drafts.**"))] | order(_createdAt desc) {
         _id,
         title,
         slug,
         coverImage,
         description,
+        _createdAt,
+        _updatedAt,
         "author": author->{
           _id,
           name
@@ -41,16 +81,15 @@ async function getBooks() {
       }
     `)
     
-    // Detailed logging
-    console.log('Raw books data:', JSON.stringify(books, null, 2))
-    
-    // Verify each book has required fields
-    books?.forEach((book: any, index: number) => {
-      console.log(`\nBook ${index + 1} validation:`)
-      console.log('- Has _id:', !!book?._id)
-      console.log('- Has title:', !!book?.title)
-      console.log('- Has slug:', !!book?.slug?.current)
+    // Detailed validation for each book
+    books?.forEach((book, index) => {
+      console.log(`\nBook ${index + 1} (${book._id}) validation:`)
+      console.log('- Title:', book?.title)
+      console.log('- Slug:', book?.slug?.current)
+      console.log('- Created:', book?._createdAt)
+      console.log('- Updated:', book?._updatedAt)
       console.log('- Has coverImage:', !!book?.coverImage)
+      console.log('- Has author:', !!book?.author)
     })
 
     return books
@@ -62,14 +101,12 @@ async function getBooks() {
 
 export default async function Home() {
   const books = await getBooks()
-
-  // Add debug logging
-  console.log('Number of books:', books?.length)
+  console.log('Final number of books rendered:', books?.length)
 
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="container mx-auto px-4 py-12">
-        <h1 className="text-6xl font-bold text-center mb-12">Your Library</h1>
+        <h1 className="text-6xl font-bold text-center mb-12">Robbie's Stuff</h1>
         
         {books?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -118,4 +155,4 @@ export default async function Home() {
       </main>
     </div>
   )
-}
+}   

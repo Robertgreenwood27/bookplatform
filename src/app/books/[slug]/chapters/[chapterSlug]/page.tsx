@@ -8,9 +8,11 @@ import { PortableText, PortableTextComponents } from '@portabletext/react'
 import type { 
   PortableTextListComponent,
   PortableTextListItemComponent,
-  PortableTextMarkComponent,  PortableTextComponentProps,
+  PortableTextMarkComponent,
+  PortableTextComponentProps,
 } from '@portabletext/react'
 import type { TypedObject } from '@portabletext/types'
+import type { Image as SanityImage } from 'sanity'
 
 // Define specific block types
 interface CodeBlock extends TypedObject {
@@ -28,6 +30,18 @@ interface SanityImageBlock extends TypedObject {
   }
   alt?: string
   caption?: string
+  hotspot?: {
+    x: number
+    y: number
+    height: number
+    width: number
+  }
+  crop?: {
+    top: number
+    bottom: number
+    left: number
+    right: number
+  }
 }
 
 interface Chapter {
@@ -76,7 +90,15 @@ const components: PortableTextComponents = {
       )
     },
     image: ({ value }: PortableTextComponentProps<SanityImageBlock>) => {
-      const imageUrl = urlForImage(value)?.url()
+      // Convert SanityImageBlock to SanityImage type
+      const imageData: SanityImage = {
+        _type: 'image',
+        asset: value.asset,
+        hotspot: value.hotspot,
+        crop: value.crop,
+      }
+      
+      const imageUrl = urlForImage(imageData)?.url()
       return (
         <figure className="my-8">
           {imageUrl && (

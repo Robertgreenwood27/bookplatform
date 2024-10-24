@@ -26,24 +26,53 @@ interface Book {
 }
 
 async function getBook(slug: string) {
-  const book = await client.fetch<Book>(`
-    *[_type == "book" && slug.current == $slug][0] {
-      _id,
-      title,
-      description,
-      coverImage,
-      "author": author->{name},
-      "chapters": chapters[]-> {
+  try {
+    // First, let's get all chapters for this book directly
+    const allChapters = await client.fetch(`
+      *[_type == "chapter" && references(*[_type == "book" && slug.current == $slug]._id)] {
         _id,
         title,
         slug,
         order
-      }
-    }
-  `, { slug })
+      } | order(order asc)
+    `, { slug })
+    
+    console.log('All available chapters:', JSON.stringify(allChapters, null, 2))
 
-  console.log('Fetched book data:', JSON.stringify(book, null, 2))
-  return book
+    // Now get the book with its chapters array
+    const book = await client.fetch<Book>(`
+      *[_type == "book" && slug.current == $slug][0] {
+        _id,
+        title,
+        description,
+        coverImage,
+        "author": author->{name},
+        "chapters": *[_type == "chapter" && _id in ^.chapters[]._ref] | order(order asc) {
+          _id,
+          title,
+          slug,
+          order
+        }
+      }
+    `, { slug })
+
+    console.log('Book data:', JSON.stringify(book, null, 2))
+
+    if (book?._id) {
+      // Get raw chapters array from book document
+      const rawBookData = await client.fetch(`
+        *[_type == "book" && slug.current == $slug][0] {
+          chapters
+        }
+      `, { slug })
+      console.log('Raw chapters array from book:', JSON.stringify(rawBookData, null, 2))
+    }
+
+    return book
+  } catch (error) {
+    console.error('Error fetching book:', error)
+    throw error
+  }
 }
 
 export default async function BookPage({ params }: { params: { slug: string } }) {
@@ -81,11 +110,11 @@ export default async function BookPage({ params }: { params: { slug: string } })
             )}
 
             {/* Chapters */}
-            {book.chapters && book.chapters.length > 0 && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-4">Chapters</h2>
-                <div className="space-y-2">
-                  {book.chapters.map((chapter) => (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-4">Chapters</h2>
+              <div className="space-y-2">
+                {book.chapters && book.chapters.length > 0 ? (
+                  book.chapters.map((chapter) => (
                     <Link
                       key={chapter._id}
                       href={`/books/${params.slug}/chapters/${chapter.slug.current}`}
@@ -96,10 +125,12 @@ export default async function BookPage({ params }: { params: { slug: string } })
                         <span className="text-gray-500">→</span>
                       </div>
                     </Link>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No chapters found</p>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </main>

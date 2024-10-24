@@ -1,7 +1,7 @@
-// src/sanity/sanity.config.ts
 import { defineConfig } from 'sanity'
 import { deskTool } from 'sanity/desk'
 import { visionTool } from '@sanity/vision'
+import { codeInput } from '@sanity/code-input'
 import { schemaTypes } from './schemaTypes'
 import { projectId, dataset } from './env'
 import type { StructureBuilder } from 'sanity/desk'
@@ -24,5 +24,6 @@ export default defineConfig({
       structure
     }),
     visionTool(),
+    codeInput(),
   ],
 })

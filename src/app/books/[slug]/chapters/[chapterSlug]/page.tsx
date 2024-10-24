@@ -6,19 +6,13 @@ import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PortableText, PortableTextComponents } from '@portabletext/react'
 import type { 
-  PortableTextBlockComponent,
-  PortableTextComponent,
   PortableTextListComponent,
   PortableTextListItemComponent,
-  PortableTextMarkComponent,
-  PortableTextTypeComponent,
+  PortableTextMarkComponent,  PortableTextComponentProps,
 } from '@portabletext/react'
-import type { 
-  TypedObject,
-  ArbitraryTypedObject,
-  Block,
-} from '@portabletext/types'
+import type { TypedObject } from '@portabletext/types'
 
+// Define specific block types
 interface CodeBlock extends TypedObject {
   _type: 'code'
   code: string
@@ -72,7 +66,7 @@ interface PageData {
 
 const components: PortableTextComponents = {
   types: {
-    code: ({ value }) => {
+    code: ({ value }: PortableTextComponentProps<CodeBlock>) => {
       return (
         <pre className="bg-zinc-900 p-4 rounded-lg overflow-x-auto">
           <code className="text-sm font-mono" data-language={value.language}>
@@ -81,7 +75,7 @@ const components: PortableTextComponents = {
         </pre>
       )
     },
-    image: ({ value }) => {
+    image: ({ value }: PortableTextComponentProps<SanityImageBlock>) => {
       const imageUrl = urlForImage(value)?.url()
       return (
         <figure className="my-8">
@@ -106,34 +100,34 @@ const components: PortableTextComponents = {
     },
   },
   block: {
-    h1: ({ children }) => (
+    h1: ({ children }: { children: React.ReactNode }) => (
       <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
     ),
-    h2: ({ children }) => (
+    h2: ({ children }: { children: React.ReactNode }) => (
       <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
     ),
-    h3: ({ children }) => (
+    h3: ({ children }: { children: React.ReactNode }) => (
       <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
     ),
-    h4: ({ children }) => (
+    h4: ({ children }: { children: React.ReactNode }) => (
       <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
     ),
-    blockquote: ({ children }) => (
+    blockquote: ({ children }: { children: React.ReactNode }) => (
       <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
         {children}
       </blockquote>
     ),
-    normal: ({ children }) => (
+    normal: ({ children }: { children: React.ReactNode }) => (
       <p className="mb-4 leading-relaxed">{children}</p>
     ),
   },
   marks: {
-    code: ({ children }) => (
+    code: ({ children }: { children: React.ReactNode }) => (
       <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
         {children}
       </code>
     ),
-    link: ({ children, value }) => (
+    link: ({ children, value }: PortableTextComponentProps<{ _type: 'link', href: string }>) => (
       <a 
         href={value?.href} 
         className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -143,26 +137,34 @@ const components: PortableTextComponents = {
         {children}
       </a>
     ),
-    strong: ({ children }) => (
+    strong: ({ children }: { children: React.ReactNode }) => (
       <strong className="font-bold">{children}</strong>
     ),
-    em: ({ children }) => (
+    em: ({ children }: { children: React.ReactNode }) => (
       <em className="italic">{children}</em>
     ),
-    underline: ({ children }) => (
+    underline: ({ children }: { children: React.ReactNode }) => (
       <span className="underline">{children}</span>
     ),
-    'strike-through': ({ children }) => (
+    'strike-through': ({ children }: { children: React.ReactNode }) => (
       <span className="line-through">{children}</span>
     ),
   } as Record<string, PortableTextMarkComponent>,
   list: {
-    bullet: ({ children }) => <ul className="list-disc pl-4 mb-4">{children}</ul>,
-    number: ({ children }) => <ol className="list-decimal pl-4 mb-4">{children}</ol>,
+    bullet: ({ children }: { children: React.ReactNode }) => (
+      <ul className="list-disc pl-4 mb-4">{children}</ul>
+    ),
+    number: ({ children }: { children: React.ReactNode }) => (
+      <ol className="list-decimal pl-4 mb-4">{children}</ol>
+    ),
   } as Record<string, PortableTextListComponent>,
   listItem: {
-    bullet: ({ children }) => <li className="mb-2">{children}</li>,
-    number: ({ children }) => <li className="mb-2">{children}</li>,
+    bullet: ({ children }: { children: React.ReactNode }) => (
+      <li className="mb-2">{children}</li>
+    ),
+    number: ({ children }: { children: React.ReactNode }) => (
+      <li className="mb-2">{children}</li>
+    ),
   } as Record<string, PortableTextListItemComponent>,
 }
 

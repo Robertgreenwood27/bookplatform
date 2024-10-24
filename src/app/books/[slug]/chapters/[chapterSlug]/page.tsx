@@ -10,6 +10,7 @@ import type {
   PortableTextListItemComponent,
   PortableTextMarkComponent,
   PortableTextComponentProps,
+  PortableTextBlockComponent,
 } from '@portabletext/react'
 import type { TypedObject } from '@portabletext/types'
 import type { Image as SanityImage } from 'sanity'
@@ -90,7 +91,6 @@ const components: PortableTextComponents = {
       )
     },
     image: ({ value }: PortableTextComponentProps<SanityImageBlock>) => {
-      // Convert SanityImageBlock to SanityImage type
       const imageData: SanityImage = {
         _type: 'image',
         asset: value.asset,
@@ -122,29 +122,29 @@ const components: PortableTextComponents = {
     },
   },
   block: {
-    h1: ({ children }: { children: React.ReactNode }) => (
+    h1: ({ value, children }: PortableTextComponentProps<any>) => (
       <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
     ),
-    h2: ({ children }: { children: React.ReactNode }) => (
+    h2: ({ value, children }: PortableTextComponentProps<any>) => (
       <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
     ),
-    h3: ({ children }: { children: React.ReactNode }) => (
+    h3: ({ value, children }: PortableTextComponentProps<any>) => (
       <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
     ),
-    h4: ({ children }: { children: React.ReactNode }) => (
+    h4: ({ value, children }: PortableTextComponentProps<any>) => (
       <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
     ),
-    blockquote: ({ children }: { children: React.ReactNode }) => (
+    normal: ({ value, children }: PortableTextComponentProps<any>) => (
+      <p className="mb-4 leading-relaxed">{children}</p>
+    ),
+    blockquote: ({ value, children }: PortableTextComponentProps<any>) => (
       <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
         {children}
       </blockquote>
     ),
-    normal: ({ children }: { children: React.ReactNode }) => (
-      <p className="mb-4 leading-relaxed">{children}</p>
-    ),
-  },
+  } as Record<string, PortableTextBlockComponent>,
   marks: {
-    code: ({ children }: { children: React.ReactNode }) => (
+    code: ({ children }: PortableTextComponentProps<any>) => (
       <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
         {children}
       </code>
@@ -159,32 +159,32 @@ const components: PortableTextComponents = {
         {children}
       </a>
     ),
-    strong: ({ children }: { children: React.ReactNode }) => (
+    strong: ({ children }: PortableTextComponentProps<any>) => (
       <strong className="font-bold">{children}</strong>
     ),
-    em: ({ children }: { children: React.ReactNode }) => (
+    em: ({ children }: PortableTextComponentProps<any>) => (
       <em className="italic">{children}</em>
     ),
-    underline: ({ children }: { children: React.ReactNode }) => (
+    underline: ({ children }: PortableTextComponentProps<any>) => (
       <span className="underline">{children}</span>
     ),
-    'strike-through': ({ children }: { children: React.ReactNode }) => (
+    'strike-through': ({ children }: PortableTextComponentProps<any>) => (
       <span className="line-through">{children}</span>
     ),
   } as Record<string, PortableTextMarkComponent>,
   list: {
-    bullet: ({ children }: { children: React.ReactNode }) => (
+    bullet: ({ children }: PortableTextComponentProps<any>) => (
       <ul className="list-disc pl-4 mb-4">{children}</ul>
     ),
-    number: ({ children }: { children: React.ReactNode }) => (
+    number: ({ children }: PortableTextComponentProps<any>) => (
       <ol className="list-decimal pl-4 mb-4">{children}</ol>
     ),
   } as Record<string, PortableTextListComponent>,
   listItem: {
-    bullet: ({ children }: { children: React.ReactNode }) => (
+    bullet: ({ children }: PortableTextComponentProps<any>) => (
       <li className="mb-2">{children}</li>
     ),
-    number: ({ children }: { children: React.ReactNode }) => (
+    number: ({ children }: PortableTextComponentProps<any>) => (
       <li className="mb-2">{children}</li>
     ),
   } as Record<string, PortableTextListItemComponent>,

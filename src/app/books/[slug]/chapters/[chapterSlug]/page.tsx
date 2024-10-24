@@ -5,12 +5,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PortableText, PortableTextComponents } from '@portabletext/react'
-import type { TypedObject } from '@portabletext/types'
 import type { 
-  PortableTextBlock, 
-  PortableTextMarkDefinition,
-  PortableTextComponentProps
+  PortableTextBlockComponent,
+  PortableTextComponent,
+  PortableTextListComponent,
+  PortableTextListItemComponent,
+  PortableTextMarkComponent,
+  PortableTextTypeComponent,
 } from '@portabletext/react'
+import type { 
+  TypedObject,
+  ArbitraryTypedObject,
+  Block,
+} from '@portabletext/types'
 
 interface CodeBlock extends TypedObject {
   _type: 'code'
@@ -65,7 +72,7 @@ interface PageData {
 
 const components: PortableTextComponents = {
   types: {
-    code: ({ value }: PortableTextComponentProps<CodeBlock>) => {
+    code: ({ value }) => {
       return (
         <pre className="bg-zinc-900 p-4 rounded-lg overflow-x-auto">
           <code className="text-sm font-mono" data-language={value.language}>
@@ -74,7 +81,7 @@ const components: PortableTextComponents = {
         </pre>
       )
     },
-    image: ({ value }: PortableTextComponentProps<SanityImageBlock>) => {
+    image: ({ value }) => {
       const imageUrl = urlForImage(value)?.url()
       return (
         <figure className="my-8">
@@ -99,34 +106,34 @@ const components: PortableTextComponents = {
     },
   },
   block: {
-    h1: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
+    h1: ({ children }) => (
       <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
     ),
-    h2: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
+    h2: ({ children }) => (
       <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
     ),
-    h3: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
+    h3: ({ children }) => (
       <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
     ),
-    h4: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
+    h4: ({ children }) => (
       <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
     ),
-    blockquote: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
+    blockquote: ({ children }) => (
       <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
         {children}
       </blockquote>
     ),
-    normal: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
+    normal: ({ children }) => (
       <p className="mb-4 leading-relaxed">{children}</p>
     ),
   },
   marks: {
-    code: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
+    code: ({ children }) => (
       <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
         {children}
       </code>
     ),
-    link: ({ children, value }: PortableTextComponentProps<PortableTextMarkDefinition & { href: string }>) => (
+    link: ({ children, value }) => (
       <a 
         href={value?.href} 
         className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -136,27 +143,27 @@ const components: PortableTextComponents = {
         {children}
       </a>
     ),
-    strong: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
+    strong: ({ children }) => (
       <strong className="font-bold">{children}</strong>
     ),
-    em: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
+    em: ({ children }) => (
       <em className="italic">{children}</em>
     ),
-    underline: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
+    underline: ({ children }) => (
       <span className="underline">{children}</span>
     ),
-    'strike-through': ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
+    'strike-through': ({ children }) => (
       <span className="line-through">{children}</span>
     ),
-  },
+  } as Record<string, PortableTextMarkComponent>,
   list: {
     bullet: ({ children }) => <ul className="list-disc pl-4 mb-4">{children}</ul>,
     number: ({ children }) => <ol className="list-decimal pl-4 mb-4">{children}</ol>,
-  },
+  } as Record<string, PortableTextListComponent>,
   listItem: {
     bullet: ({ children }) => <li className="mb-2">{children}</li>,
     number: ({ children }) => <li className="mb-2">{children}</li>,
-  },
+  } as Record<string, PortableTextListItemComponent>,
 }
 
 async function getChapterData(bookSlug: string, chapterSlug: string): Promise<PageData> {

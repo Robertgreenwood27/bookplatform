@@ -79,11 +79,6 @@ interface PageData {
   nextChapter?: ChapterNavigation
 }
 
-interface PortableTextBlock extends TypedObject {
-  _type: string
-  style: string
-  children: TypedObject[]
-}
 
 const components: PortableTextComponents = {
   types: {

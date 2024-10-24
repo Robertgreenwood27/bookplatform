@@ -1,10 +1,9 @@
-// src/app/books/[slug]/page.tsx
 import { client } from '@/sanity/lib/client'
 import { urlForImage } from '@/sanity/lib/image'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { SanityAsset } from '@sanity/image-url/lib/types/types'
+import type { Image as SanityImageType } from 'sanity'
 
 interface Chapter {
   _id: string
@@ -15,28 +14,11 @@ interface Chapter {
   order: number
 }
 
-interface SanityImage {
-  _type: 'image'
-  asset: SanityAsset
-  hotspot?: {
-    x: number
-    y: number
-    height: number
-    width: number
-  }
-  crop?: {
-    top: number
-    bottom: number
-    left: number
-    right: number
-  }
-}
-
 interface Book {
   _id: string
   title: string
   description?: string
-  coverImage: SanityImage
+  coverImage: SanityImageType
   author?: {
     name: string
   }
@@ -118,7 +100,7 @@ export default async function BookPage({ params }: { params: { slug: string } })
           <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-2xl">
             {book.coverImage && (
               <Image
-                src={urlForImage(book.coverImage)?.url() || ''}
+                src={urlForImage(book.coverImage).url()}
                 alt={book.title}
                 fill
                 className="object-cover"

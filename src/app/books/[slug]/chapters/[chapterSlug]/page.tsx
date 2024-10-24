@@ -2,10 +2,18 @@ import { client } from '@/sanity/lib/client'
 import { urlForImage } from '@/sanity/lib/image'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PortableText, PortableTextComponents } from '@portabletext/react'
-import type { Image as SanityImageType } from 'sanity'
-import type { TypedObject, Block } from '@portabletext/types'
+import type { TypedObject } from '@portabletext/types'
+import type { 
+  PortableTextBlock, 
+  ArbitraryTypedObject, 
+  PortableTextMarkDefinition,
+  PortableTextTypeComponent,
+  PortableTextBlockComponent,
+  PortableTextComponentProps
+} from '@portabletext/react'
 
 interface CodeBlock extends TypedObject {
   _type: 'code'
@@ -22,17 +30,6 @@ interface SanityImageBlock extends TypedObject {
   }
   alt?: string
   caption?: string
-}
-
-interface CustomBlock extends Block {
-  style?: 'normal' | 'h1' | 'h2' | 'h3' | 'h4' | 'blockquote'
-}
-
-interface PortableTextMarkProps {
-  children: React.ReactNode
-  value?: {
-    href?: string
-  }
 }
 
 interface Chapter {
@@ -69,9 +66,14 @@ interface PageData {
   nextChapter?: ChapterNavigation
 }
 
+type BlockComponent = PortableTextBlockComponent<PortableTextBlock>
+type CustomMarkComponent = React.ComponentType<PortableTextComponentProps<PortableTextMarkDefinition>>
+
+const Block: BlockComponent = ({ children }) => <div>{children}</div>
+
 const components: PortableTextComponents = {
   types: {
-    code: ({ value }: { value: CodeBlock }) => {
+    code: ({ value }: PortableTextComponentProps<CodeBlock>) => {
       return (
         <pre className="bg-zinc-900 p-4 rounded-lg overflow-x-auto">
           <code className="text-sm font-mono" data-language={value.language}>
@@ -80,16 +82,20 @@ const components: PortableTextComponents = {
         </pre>
       )
     },
-    image: ({ value }: { value: SanityImageBlock }) => {
+    image: ({ value }: PortableTextComponentProps<SanityImageBlock>) => {
       const imageUrl = urlForImage(value)?.url()
       return (
         <figure className="my-8">
           {imageUrl && (
-            <img
-              src={imageUrl}
-              alt={value.alt || ''}
-              className="rounded-lg w-full"
-            />
+            <div className="relative aspect-video w-full">
+              <Image
+                src={imageUrl}
+                alt={value.alt || ''}
+                fill
+                className="rounded-lg object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            </div>
           )}
           {value.caption && (
             <figcaption className="mt-2 text-center text-sm text-gray-500">
@@ -101,34 +107,34 @@ const components: PortableTextComponents = {
     },
   },
   block: {
-    h1: ({ children }: { children: React.ReactNode }) => (
+    h1: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
       <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
     ),
-    h2: ({ children }: { children: React.ReactNode }) => (
+    h2: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
       <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
     ),
-    h3: ({ children }: { children: React.ReactNode }) => (
+    h3: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
       <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
     ),
-    h4: ({ children }: { children: React.ReactNode }) => (
+    h4: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
       <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
     ),
-    blockquote: ({ children }: { children: React.ReactNode }) => (
+    blockquote: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
       <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
         {children}
       </blockquote>
     ),
-    normal: ({ children }: { children: React.ReactNode }) => (
+    normal: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
       <p className="mb-4 leading-relaxed">{children}</p>
     ),
   },
   marks: {
-    code: ({ children }: PortableTextMarkProps) => (
+    code: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
       <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
         {children}
       </code>
     ),
-    link: ({ children, value }: PortableTextMarkProps) => (
+    link: ({ children, value }: PortableTextComponentProps<PortableTextMarkDefinition & { href: string }>) => (
       <a 
         href={value?.href} 
         className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -138,24 +144,31 @@ const components: PortableTextComponents = {
         {children}
       </a>
     ),
-    strong: ({ children }: PortableTextMarkProps) => (
+    strong: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
       <strong className="font-bold">{children}</strong>
     ),
-    em: ({ children }: PortableTextMarkProps) => (
+    em: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
       <em className="italic">{children}</em>
     ),
-    underline: ({ children }: PortableTextMarkProps) => (
+    underline: ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
       <span className="underline">{children}</span>
     ),
-    'strike-through': ({ children }: PortableTextMarkProps) => (
+    'strike-through': ({ children }: PortableTextComponentProps<PortableTextMarkDefinition>) => (
       <span className="line-through">{children}</span>
     ),
+  },
+  list: {
+    bullet: ({ children }) => <ul className="list-disc pl-4 mb-4">{children}</ul>,
+    number: ({ children }) => <ol className="list-decimal pl-4 mb-4">{children}</ol>,
+  },
+  listItem: {
+    bullet: ({ children }) => <li className="mb-2">{children}</li>,
+    number: ({ children }) => <li className="mb-2">{children}</li>,
   },
 }
 
 async function getChapterData(bookSlug: string, chapterSlug: string): Promise<PageData> {
   try {
-    // Get complete data in a single query
     const data = await client.fetch(`{
       "chapter": *[_type == "chapter" && slug.current == $chapterSlug][0] {
         _id,

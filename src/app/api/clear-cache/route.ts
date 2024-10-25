@@ -8,7 +8,6 @@ export async function GET(request: Request) {
   const token = searchParams.get('token')
   
   // Check if the token matches your secret token
-  // Store this in your environment variables
   if (token !== process.env.REVALIDATE_TOKEN) {
     return NextResponse.json(
       { 
@@ -37,7 +36,7 @@ export async function GET(request: Request) {
     console.error('Error revalidating:', err)
     return NextResponse.json({
       revalidated: false,
-      message: err.message
+      message: err instanceof Error ? err.message : 'An unknown error occurred'
     }, { status: 500 })
   }
 }

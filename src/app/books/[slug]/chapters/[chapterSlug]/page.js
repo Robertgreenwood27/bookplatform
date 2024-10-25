@@ -7,6 +7,54 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PortableText } from '@portabletext/react'
 
 const components = {
+  block: {
+    h1: ({ children }) => (
+      <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
+    ),
+    h2: ({ children }) => (
+      <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
+    ),
+    h3: ({ children }) => (
+      <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
+    ),
+    h4: ({ children }) => (
+      <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
+    ),
+    normal: ({ children }) => (
+      <p className="mb-4 leading-relaxed">{children}</p>
+    ),
+    blockquote: ({ children }) => (
+      <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
+        {children}
+      </blockquote>
+    ),
+  },
+  marks: {
+    strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+    em: ({ children }) => <em className="italic">{children}</em>,
+    code: ({ children }) => (
+      <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
+        {children}
+      </code>
+    ),
+    link: ({ value, children }) => {
+      const target = (value?.href || '').startsWith('http') ? '_blank' : undefined
+      return (
+        <a
+          href={value?.href}
+          target={target}
+          rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+          className="text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          {children}
+        </a>
+      )
+    },
+    underline: ({ children }) => <span className="underline">{children}</span>,
+    'strike-through': ({ children }) => (
+      <span className="line-through">{children}</span>
+    ),
+  },
   types: {
     code: ({ value }) => {
       return (
@@ -48,72 +96,17 @@ const components = {
       )
     },
   },
-  block: {
-    h1: ({ children }) => (
-      <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
-    ),
-    h2: ({ children }) => (
-      <h2 className="text-3xl font-bold mt-8 mb-4">{children}</h2>
-    ),
-    h3: ({ children }) => (
-      <h3 className="text-2xl font-bold mt-6 mb-3">{children}</h3>
-    ),
-    h4: ({ children }) => (
-      <h4 className="text-xl font-bold mt-4 mb-2">{children}</h4>
-    ),
-    normal: ({ children }) => (
-      <p className="mb-4 leading-relaxed">{children}</p>
-    ),
-    blockquote: ({ children }) => (
-      <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic">
-        {children}
-      </blockquote>
-    ),
-  },
-  marks: {
-    code: ({ children }) => (
-      <code className="bg-zinc-800 rounded px-1 py-0.5 font-mono text-sm">
-        {children}
-      </code>
-    ),
-    link: ({ children, value }) => (
-      <a 
-        href={value?.href} 
-        className="text-blue-400 hover:text-blue-300 transition-colors"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {children}
-      </a>
-    ),
-    strong: ({ children }) => (
-      <strong className="font-bold">{children}</strong>
-    ),
-    em: ({ children }) => (
-      <em className="italic">{children}</em>
-    ),
-    underline: ({ children }) => (
-      <span className="underline">{children}</span>
-    ),
-    'strike-through': ({ children }) => (
-      <span className="line-through">{children}</span>
-    ),
-  },
   list: {
     bullet: ({ children }) => (
-      <ul className="list-disc pl-4 mb-4">{children}</ul>
+      <ul className="list-disc pl-4 mb-4 space-y-2">{children}</ul>
     ),
     number: ({ children }) => (
-      <ol className="list-decimal pl-4 mb-4">{children}</ol>
+      <ol className="list-decimal pl-4 mb-4 space-y-2">{children}</ol>
     ),
   },
   listItem: {
-    bullet: ({ children }) => (
-      <li className="mb-2">{children}</li>
-    ),
-    number: ({ children }) => (
-      <li className="mb-2">{children}</li>
-    ),
+    bullet: ({ children }) => <li>{children}</li>,
+    number: ({ children }) => <li>{children}</li>,
   },
 }
 

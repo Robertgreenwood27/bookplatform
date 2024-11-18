@@ -99,7 +99,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-black text-white">
       <main className="container mx-auto px-4 py-12">
-        <h1 className="text-6xl font-bold text-center mb-12">Desk notes by Arris</h1>
+        <h1 className="text-6xl font-bold text-center mb-12">Desk Notes by Arris</h1>
         
         {books?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

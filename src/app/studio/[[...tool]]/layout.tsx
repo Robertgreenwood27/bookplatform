@@ -1,7 +1,7 @@
 // src/app/studio/[[...tool]]/layout.tsx
 export const metadata = {
     title: 'Sanity Studio',
-    description: 'Backend for your book platform',
+    description: 'Backend for your Desk Notes by Arris',
   }
   
   export default function RootLayout({

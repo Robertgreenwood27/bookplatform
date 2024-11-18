@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="w-full py-4 px-4 border-t border-zinc-800">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="text-zinc-500 text-sm">
-          © {new Date().getFullYear()} Book Platform
+          © {new Date().getFullYear()} Desk Notes by Arris
         </div>
         <Link 
           href="/studio"
